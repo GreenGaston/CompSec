@@ -58,17 +58,33 @@ public class Client {
         server.start();
         //import json named "client.json"
         JSONParser parser = new JSONParser();
-        JSONObject json=null;
+        JSONObject json1=null;
+        JSONObject json2=null;
         try {
-            Object obj = parser.parse(new FileReader("client.json"));
-            json = (JSONObject) obj;
+            Object obj = parser.parse(new FileReader("client1.json"));
+            json1 = (JSONObject) obj;
+
+            Object obj2 = parser.parse(new FileReader("client2.json"));
+            json2 = (JSONObject) obj2;
+
+
            
         } catch (Exception e) {
             e.printStackTrace();
         }
-        System.out.println(json);
-        Client client = new Client(json);
-        client.connect();
+        System.out.println(json1);
+        System.out.println(json2);
+
+        Client client1 = new Client(json1);
+        Client client2 = new Client(json2);
+
+
+        ClientThread clientThread1 = new ClientThread(client1);
+        ClientThread clientThread2 = new ClientThread(client2);
+
+        clientThread1.start();
+        clientThread2.start();
+
             
 
     }
@@ -80,5 +96,15 @@ public class Client {
             server.start();
         }
 
+    }
+
+    public static class ClientThread extends Thread{
+        public Client client;
+        public ClientThread(Client client){
+            this.client = client;
+        }
+        public void run(){
+            client.connect();
+        }
     }
 }

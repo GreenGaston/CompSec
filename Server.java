@@ -38,7 +38,7 @@ public class Server {
         } else {
             counters.put(id, counters.get(id) - 1);
         }
-        logger.log(Level.INFO, "Counter updated for user {0}: {1}", new Object[]{id, counters.get(id)});
+        logger.log(Level.INFO, "Counter updated for user {0} {1}", new Object[]{id, counters.get(id)});
     }
 
     public void start() {
@@ -108,6 +108,7 @@ public class Server {
                 String line = in.readLine();
                 String[] parts = line.split(" ");
                 synchronized (server) {
+                    findUserInLogs(parts[0]);
                     if (server.users.containsKey(parts[0])) {
                         Client client = server.users.get(parts[0]);
                         if (client.loggedIn) {
@@ -119,6 +120,9 @@ public class Server {
                             id = parts[0];
                             out.println("You are now logged in");
                         } else {
+                            //debug print password and wrong password
+                            System.out.println(client.password);
+                            System.out.println(parts[1]);
                             out.println("Incorrect password");
                             return;
                         }
@@ -127,6 +131,8 @@ public class Server {
                         server.users.put(parts[0], server.new Client(parts[1], parts[0], true));
                         server.counters.put(parts[0], 0);
                         id = parts[0];
+                        //log new user
+                        logger.log(Level.INFO, "New user created: {0} {1}", new Object[]{parts[0], parts[1]});
                     }
                 }
 
@@ -149,6 +155,9 @@ public class Server {
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
+                if (id != null) {
+                    server.users.get(id).logout();
+                }
                 try {
                     socket.close();
                 } catch (IOException e) {
@@ -156,6 +165,39 @@ public class Server {
                 }
             }
         }
+    }
+
+    public void findUserInLogs(String id) {
+        //find the users password 
+        try{
+            BufferedReader br = new BufferedReader(new FileReader("server.log"));
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(" ");
+                if(parts[1].equals("New") && parts[2].equals("user") && parts[4].equals(id)){
+                    String password=parts[5];
+                    int lastfound=0;
+                    while ((line = br.readLine()) != null) {
+                        
+                        String[] parts2=line.split(" ");
+                        boolean temp=parts2[1].equals("Counter");
+                        boolean temp2=parts2[5].equals(id);
+                        if(parts2[1].equals("Counter") && parts2[5].equals(id)){
+                            lastfound=Integer.parseInt(parts2[6]);
+                        }
+                    }
+                    //add user to hashmap
+                    users.put(id, new Client(password, id, false));
+                    counters.put(id, lastfound);
+                    break;
+
+                }
+            }
+            br.close();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        
     }
 
     public static void main(String[] args) {

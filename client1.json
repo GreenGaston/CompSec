@@ -1,0 +1,16 @@
+{
+    "id":"user1",
+    "password":"1234",
+    "server":
+    {
+        "ip":"Server_IP",
+        "port":9000
+    },
+    "actions":{
+        "delay":1,
+        "steps":{
+            "1":"increment",
+            "2":"decrement"
+        }
+    }
+}
